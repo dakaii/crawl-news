@@ -88,3 +88,13 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+ITEM_PIPELINES = {'news.pipelines.MongoDBPipeline': 100, }
+
+
+MONGODB_USERNAME = 'testuser'
+MONGODB_PASSWORD = 'pass123'
+MONGODB_URI = 'mongodb://{}:{}@ds050087.mlab.com:50087/crawl-news'.format(
+    MONGODB_USERNAME, MONGODB_PASSWORD)
+MONGODB_DB = "crawl-news"
+MONGODB_COLLECTION = "articles"

@@ -4,6 +4,9 @@ import requests
 import scrapy
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
+from urllib.parse import urlparse
+
+from news.items import NewsItem
 
 
 class BbcSpider(scrapy.Spider):
@@ -19,19 +22,19 @@ class BbcSpider(scrapy.Spider):
         summaries = self._get_summaries(media_contents)
 
         for idx, title in enumerate(titles):
-            scraped_info = {}
+            item = NewsItem()
             paragraphs = self._get_paragraphs(article_urls[idx])
             try:
-                scraped_info['title'] = title
-                scraped_info['article_url'] = article_urls[idx]
-                scraped_info['tag'] = tags[idx]
-                scraped_info['summary'] = summaries[idx]
-                scraped_info['paragraphs'] = paragraphs
+                item['title'] = title
+                item['article_url'] = article_urls[idx]
+                item['tag'] = tags[idx]
+                item['summary'] = summaries[idx]
+                item['paragraphs'] = paragraphs
             except IndexError as e:
                 # TODO the print func below should be replaced with a logger
                 print(e, 'The html structure might have been changed')
 
-            yield scraped_info
+            yield item
 
     def _get_paragraphs(self, article_url):
         superfluous_elements = [
@@ -53,11 +56,12 @@ class BbcSpider(scrapy.Spider):
         return text_content
 
     def _get_article_urls(self, response):
-        base_url = response.url
+        base_url = response.url[:-1].replace('http://', 'https://')
+        domain = response.url.replace('http://', '').replace('https://', '')
         scraped_urls = [raw_data.strip() for raw_data in response.css(
             '.media__link::attr(href)').extract()]
         for idx, article_url in enumerate(scraped_urls):
-            if not article_url.startswith(base_url):
+            if domain not in article_url:
                 scraped_urls[idx] = base_url + article_url
         return scraped_urls
 
