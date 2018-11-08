@@ -8,3 +8,4 @@ class NewsItem(scrapy.Item):
     tag = scrapy.Field()
     summary = scrapy.Field()
     paragraphs = scrapy.Field()
+    scraped_date = scrapy.Field()

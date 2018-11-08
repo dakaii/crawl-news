@@ -3,6 +3,7 @@ import re
 import requests
 import scrapy
 from bs4 import BeautifulSoup
+from datetime import datetime
 from requests.exceptions import ConnectionError
 from urllib.parse import urlparse
 
@@ -12,7 +13,7 @@ from news.items import NewsItem
 class BbcSpider(scrapy.Spider):
     name = 'bbc'
     allowed_domains = ['www.bbc.com']
-    start_urls = ['http://www.bbc.com/']
+    start_urls = ['https://www.bbc.com/']
 
     def parse(self, response):
         media_contents = self._extract_text_by_css(response, '.media__content')
@@ -30,6 +31,7 @@ class BbcSpider(scrapy.Spider):
                 item['tag'] = tags[idx]
                 item['summary'] = summaries[idx]
                 item['paragraphs'] = paragraphs
+                item['scraped_date'] = datetime.now().strftime("%Y-%m-%d")
             except IndexError as e:
                 # TODO the print func below should be replaced with a logger
                 print(e, 'The html structure might have been changed')
@@ -38,31 +40,33 @@ class BbcSpider(scrapy.Spider):
 
     def _get_paragraphs(self, article_url):
         superfluous_elements = [
-                '', 'Share this with', 'Email', 'Facebook', 'Messenger',
+                'Share this with', 'Email', 'Facebook', 'Messenger',
                 'Messenger', 'Twitter', 'Pinterest', 'WhatsApp', 'LinkedIn',
-                'Copy this link',
-                'These are external links and will open in a new window']
+                'Copy this link', '\n',
+                'These are external links and will open in a new window',
+                'The BBC is not responsible for the content of external Internet sites']
         text_content = []
         try:
             page = requests.get(article_url)
             soup = BeautifulSoup(page.content, "html.parser")
             paragraphs = soup.find_all("p")
             for paragraph in paragraphs:
-                if paragraph.text not in superfluous_elements:
-                    text_content.append(paragraph.text)
+                text = paragraph.text.strip()
+                if text and text not in superfluous_elements:
+                    text_content.append(text)
         except ConnectionError as e:
             # TODO the print func below should be replaced with a logger
             print(e)
         return text_content
 
     def _get_article_urls(self, response):
-        base_url = response.url[:-1].replace('http://', 'https://')
-        domain = response.url.replace('http://', '').replace('https://', '')
+        domain = response.url.replace(
+            'http://', '').replace('https://', '').replace('.com/', '.co')
         scraped_urls = [raw_data.strip() for raw_data in response.css(
             '.media__link::attr(href)').extract()]
         for idx, article_url in enumerate(scraped_urls):
             if domain not in article_url:
-                scraped_urls[idx] = base_url + article_url
+                scraped_urls[idx] = response.url + article_url
         return scraped_urls
 
     def _get_summaries(self, media_contents):
