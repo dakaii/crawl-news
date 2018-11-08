@@ -1,41 +1,27 @@
 # -*- coding: utf-8 -*-
-import os
-import pymongo
 from bson.json_util import dumps
 from bson.regex import Regex
-from datetime import datetime, timedelta
-from flask import Flask, jsonify, request
+from flask import Flask, request
 
-from news.news import settings
+from database import setup_db
+from helper import get_scraped_date
 
 app = Flask(__name__)
 
-
-connection = pymongo.MongoClient(
-    settings.MONGODB_URI,
-)
-db = connection[settings.MONGODB_DB]
-collection = db[settings.MONGODB_COLLECTION]
-
+collection = setup_db()
 
 @app.route('/bbc')
 def bbc_articles():
     title = request.args.get('title', '')
     tag = request.args.get('tag', '')
-    try:
-        days = int(request.args.get('days_old', 0))
-        scraped_date = (datetime.now() - timedelta(days=days)
-                        ).strftime("%Y-%m-%d")
-        print(scraped_date)
-    except TypeError as e:
-        scraped_date = datetime.now().strftime("%Y-%m-%d")
+    scraped_date = get_scraped_date(request)
 
     items = collection.find({"$and": [
         {'title': Regex(title)},
         {'tag': Regex(tag)},
         {'scraped_date': scraped_date}
     ]})
-    return dumps(items)
+    return dumps(items.count())
 
 
 if __name__ == "__main__":

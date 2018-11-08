@@ -1,9 +1,5 @@
 # crawl-news
 
-1. The use of python3.5 or later is recommended.
-
-2. Potential enhancements are indicated with the TODO comments.
-
 ## install the dependencies
 
 ```console
@@ -16,14 +12,14 @@ or
 pip install -r requirements.txt
 ```
 
-## run the following command to scrape bcc.com
+## run the following command in the top root directory to scrape bcc.com
 
 ```console
 cd news
 scrapy crawl bbc
 ```
 
-## run the flask app to start up the api.
+## run the following command in the top root directory to run the program to start up the api
 
 ```console
 
@@ -37,7 +33,7 @@ or
 python main.py
 ```
 
-## send a get-request to the api.
+## send a get-request to the api
 
 - The accepted query parameters are title, tag, and days_old.
 
@@ -47,4 +43,15 @@ python main.py
 curl 'localhost:5000/bbc?tag=US&days_old=0'
 ```
 
-### contact Daiki Nakashita(daiki815@gmail.com) for the database credentials.
+## How to run the tests
+
+```console
+python3 -m unittest tests/test.py
+```
+
+## Comments
+
+    - The program is written in Python 3.
+    - Potential enhancements are indicated by TODO comments.
+
+### contact Daiki Nakashita(daiki815@gmail.com) for the database credentials

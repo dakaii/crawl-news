@@ -1,2 +1,2 @@
-MONGODB_USERNAME = 'testuser'
+MONGODB_USERNAME = 'test'
 MONGODB_PASSWORD = 'pass123'

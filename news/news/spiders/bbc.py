@@ -5,8 +5,8 @@ import scrapy
 from bs4 import BeautifulSoup
 from datetime import datetime
 from requests.exceptions import ConnectionError
-from urllib.parse import urlparse
 
+from news.logger import get_logger
 from news.items import NewsItem
 
 
@@ -14,6 +14,7 @@ class BbcSpider(scrapy.Spider):
     name = 'bbc'
     allowed_domains = ['www.bbc.com']
     start_urls = ['https://www.bbc.com/']
+    logger = get_logger(name, name+'.log')
 
     def parse(self, response):
         media_contents = self._extract_text_by_css(response, '.media__content')
@@ -33,18 +34,17 @@ class BbcSpider(scrapy.Spider):
                 item['paragraphs'] = paragraphs
                 item['scraped_date'] = datetime.now().strftime("%Y-%m-%d")
             except IndexError as e:
-                # TODO the print func below should be replaced with a logger
-                print(e, 'The html structure might have been changed')
+                logger.error(e+'The html structure might have been changed')
 
             yield item
 
     def _get_paragraphs(self, article_url):
         superfluous_elements = [
-                'Share this with', 'Email', 'Facebook', 'Messenger',
-                'Messenger', 'Twitter', 'Pinterest', 'WhatsApp', 'LinkedIn',
-                'Copy this link', '\n',
-                'These are external links and will open in a new window',
-                'The BBC is not responsible for the content of external Internet sites']
+            'Share this with', 'Email', 'Facebook', 'Messenger',
+            'Messenger', 'Twitter', 'Pinterest', 'WhatsApp', 'LinkedIn',
+            'Copy this link', '\n',
+            'These are external links and will open in a new window',
+            'The BBC is not responsible for the content of external Internet sites']
         text_content = []
         try:
             page = requests.get(article_url)
@@ -55,8 +55,7 @@ class BbcSpider(scrapy.Spider):
                 if text and text not in superfluous_elements:
                     text_content.append(text)
         except ConnectionError as e:
-            # TODO the print func below should be replaced with a logger
-            print(e)
+            logger.error(e)
         return text_content
 
     def _get_article_urls(self, response):
@@ -66,7 +65,7 @@ class BbcSpider(scrapy.Spider):
             '.media__link::attr(href)').extract()]
         for idx, article_url in enumerate(scraped_urls):
             if domain not in article_url:
-                scraped_urls[idx] = response.url + article_url
+                scraped_urls[idx] = response.url[:-1] + article_url
         return scraped_urls
 
     def _get_summaries(self, media_contents):
@@ -77,10 +76,7 @@ class BbcSpider(scrapy.Spider):
         arr = []
         for media_content in media_contents:
             raw_data = re.search(target, media_content)
-            if raw_data:
-                arr.append(raw_data.group(1).strip())
-            else:
-                arr.append(None)
+            arr.append(raw_data.group(1).strip() if raw_data else None)
         return arr
 
     def _extract_text_by_css(self, response, target):
