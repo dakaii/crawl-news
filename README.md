@@ -46,3 +46,5 @@ python main.py
 ```console
 curl 'localhost:5000/bbc?tag=US&days_old=0'
 ```
+
+### contact Daiki Nakashita(daiki815@gmail.com) for the database credentials.
