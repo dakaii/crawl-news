@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from .confidential import MONGODB_USERNAME, MONGODB_PASSWORD
 # Scrapy settings for news project
 #
 # For simplicity, this file contains only settings considered important or
@@ -91,9 +91,6 @@ ROBOTSTXT_OBEY = True
 
 ITEM_PIPELINES = {'news.pipelines.MongoDBPipeline': 100, }
 
-
-MONGODB_USERNAME = 'testuser'
-MONGODB_PASSWORD = 'pass123'
 MONGODB_URI = 'mongodb://{}:{}@ds050087.mlab.com:50087/crawl-news'.format(
     MONGODB_USERNAME, MONGODB_PASSWORD)
 MONGODB_DB = "crawl-news"
